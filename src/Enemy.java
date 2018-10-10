@@ -162,7 +162,7 @@ public abstract class Enemy extends Entity
     void makeKing(){
         if((int)(Math.random() * 100) + 1 > 30)
             return;
-        System.out.print("A King " + getImage() + " has spawned!!!");
+        System.out.print("A King " + getImage() + " has spawned!!!!");
         setImage("king_" + getImage());
         setAttack(getAttack()*3);
         setMaxHealth(getHealth()*3);
