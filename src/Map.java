@@ -1,66 +1,125 @@
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Map
 {
-    private final boolean wall = false, open = true;
+    /**The maximum height the rooms can be.*/
+    private static final int MAX_ROOM_HEIGHT = 7;
+    /**The maximum width the rooms can be.*/
+    private static final int MAX_ROOM_WIDTH = 7;
+    /**The minimum height the rooms can be.*/
+    private static final int MIN_CONNECTIONS = 1;
+    /**The minimum height the rooms can be.*/
+    private static final int MIN_ROOM_HEIGHT = 2;
+    /**The minimum width the rooms can be.*/
+    private static final int MIN_ROOM_WIDTH = 2;
+    /**Represents an open room on the map.*/
+    private static final boolean OPEN = true;
+    /**Represents the tendency for a passageway to occur.*/
+    private static final double PASSAGEWAY_INCIDENCE = 0.01;
+    /**Represents if the rooms are square like.*/
+    private static final boolean ROOMS_SHOULD_BE_SQUARISH = true;
+    /**Represents a wall on the map.*/
+    private static final boolean WALL = false;
+    /**The height of the map.*/
+    private int height;
+    /**The map.*/
     private boolean[][] map;
-    private int width, height, rooms;
-    private Point startPosition,
-                  stairPosition;
-
-    private final double passagewayIncidence = 0.01;
-    private final int minConnections = 1,
-                      minRoomWidth = 2, minRoomHeight = 2,
-                      maxRoomWidth = 7, maxRoomHeight = 7;
-    
-    private boolean roomsShouldBeSquareish = true;
-
+    /**The width of the map.*/
+    private int width;
+    /**The number of rooms within the map.*/
+    private int rooms;
+    /**The starting position of the player.*/
+    private Point startPosition;
+    /**The position of the stairs.*/
+    private Point stairPosition;
     /**
      * Map constructor
-     * @param w int width of the map
-     * @param h int height of the map
+     * @param setWidth int width of the map
+     * @param setHeight int height of the map
      */
-    public Map(int w, int h) {
-        map = new boolean[h][w];
-        width = w;
-        height = h;
+    Map(int setWidth, int setHeight) {
+        map = new boolean[setHeight][setWidth];
+        width = setWidth;
+        height = setHeight;
         initMap();
     }
-
     /**
-     * Tester-- prints out a 40x20 map.
-     * @param args {}
+     * Connects points given two Point values
+     * @param a Point a
+     * @param b Point b
      */
-    public static void main(String[] args) {
-        Map m = new Map(40, 20);
-        System.out.println(m);
-    }
+    private void connectPoints(Point a, Point b) {
+        int y1 = a.y(), y2 = b.y();
+        int x1 = a.x(), x2 = b.x();
 
+        int bx = Math.max(x1, x2), sx = Math.min(x1, x2);
+        int by = Math.max(y1, y2), sy = Math.min(y1, y2);
+
+        for (int y = sy; y <= by; y++)
+            map[y][x1] = OPEN;
+        for (int x = sx; x <= bx; x++)
+            map[y2][x] = OPEN;
+    }
+    /**
+     * Fill a given square of space with open blocks
+     * @param bx int top left x value
+     * @param by int top left y value
+     * @param w int width
+     * @param h int height
+     */
+    private void fillOpen(int bx, int by, int w, int h) {
+        for (int y = by; y <= by + h; y++) {
+            for (int x = bx; x <= bx + w; x++) {
+                map[y][x] = OPEN;
+            }
+        }
+    }
+    /**
+     * Checks if a given square of space is open for room-creation
+     * @param bx int top left x value
+     * @param by int top left y value
+     * @param w int width
+     * @param h int height
+     * @return boolean value
+     */
+    private boolean isBoxOpen(int bx, int by, int w, int h) {
+        if (bx + w >= width - 1 || by + h >= height - 1)
+            return false;
+
+        for (int y = by - 1; y <= by + h + 1; y++) {
+            for (int x = bx - 1; x <= bx + w + 1; x++) {
+                if (!isWall(x, y))
+                    return false;
+            }
+        }
+        return true;
+    }
     /**
      * Initializes the map
      */
     private void initMap() {
         for (int y = 0; y < map.length; y++)
             for (int x = 0; x < map[0].length; x++)
-                map[y][x] = wall;
+                map[y][x] = WALL;
         
-        rooms = (height * width) / ((maxRoomWidth) * (maxRoomHeight));
+        rooms = (height * width) / ((MAX_ROOM_WIDTH) * (MAX_ROOM_HEIGHT));
         rooms = randInt(rooms - 3, rooms + 2);
-        ArrayList<Point> midpoints = new ArrayList<Point>();
+        ArrayList<Point> midpoints = new ArrayList<>();
         
         for (int i = 0, iterations = 0; i < rooms; i++) {
             int x = randX(), y = randY(),
-                h = randInt(minRoomHeight, maxRoomHeight + 1),
-                w = randInt(minRoomWidth, maxRoomWidth + 1);
+                h = randInt(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT + 1),
+                w = randInt(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH + 1);
                 
-            if (roomsShouldBeSquareish) {
+            if (ROOMS_SHOULD_BE_SQUARISH) {
                 if (Math.random() < 0.5)
                     h = randInt(w - 2, w + 3);
                 else
                     w = randInt(h - 2, h + 3);
                     
-                if (w < minRoomWidth)  w = minRoomWidth;
-                if (h < minRoomHeight) h = minRoomHeight;
+                if (w < MIN_ROOM_WIDTH)  w = MIN_ROOM_WIDTH;
+                if (h < MIN_ROOM_HEIGHT) h = MIN_ROOM_HEIGHT;
             }
             
             if (isBoxOpen(x, y, w, h)) {
@@ -79,7 +138,6 @@ public class Map
         
         initPassages(midpoints.toArray(new Point[midpoints.size()]));
     }
-
     /**
      * Initializes passages given Point[] of midpoints
      * @param m Point[] midpoints
@@ -100,7 +158,7 @@ public class Map
             for (int j = 0; j < m.length; j++) {
                 if (i == j) continue;
                 b = m[j];
-                if (Math.random() < passagewayIncidence) {
+                if (Math.random() < PASSAGEWAY_INCIDENCE) {
                   connectPoints(a, b);
                   if ((a.equals(startPosition) && b.equals(stairPosition)) || (a.equals(stairPosition) && b.equals(startPosition)))
                     stairAndStartConnected = true;
@@ -112,7 +170,7 @@ public class Map
         
         //Ensure every room has a high probability of being accessed
         for (int i = 0; i < numConnected.length; i++)
-          if (numConnected[i] <= minConnections) {
+          if (numConnected[i] <= MIN_CONNECTIONS) {
             int connectTo = i;
             while (connectTo == i && rooms > 1)
               connectTo = (int)(Math.random() * m.length);
@@ -123,220 +181,133 @@ public class Map
         if (!stairAndStartConnected)
             connectPoints(startPosition, stairPosition);
     }
-
-    /**
-     * Connects points given two Point values
-     * @param a Point a
-     * @param b Point b
-     */
-    private void connectPoints(Point a, Point b) {
-        int y1 = a.y(), y2 = b.y();
-        int x1 = a.x(), x2 = b.x();
-
-        int bx = Math.max(x1, x2), sx = Math.min(x1, x2);
-        int by = Math.max(y1, y2), sy = Math.min(y1, y2);
-
-        for (int y = sy; y <= by; y++)
-            map[y][x1] = open;
-        for (int x = sx; x <= bx; x++)
-            map[y2][x] = open;
-    }
-
-    /**
-     * Checks if a given square of space is open for room-creation
-     * @param bx int top left x value
-     * @param by int top left y value
-     * @param w int width
-     * @param h int height
-     * @return boolean value
-     */
-    public boolean isBoxOpen(int bx, int by, int w, int h) {
-        if (bx + w >= width - 1 || by + h >= height - 1)
-            return false;
-        
-        for (int y = by - 1; y <= by + h + 1; y++) {
-            for (int x = bx - 1; x <= bx + w + 1; x++) {
-                if (!isWall(x, y))
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Fill a given square of space with open blocks
-     * @param bx int top left x value
-     * @param by int top left y value
-     * @param w int width
-     * @param h int height
-     */
-    private void fillOpen(int bx, int by, int w, int h) {
-        for (int y = by; y <= by + h; y++) {
-            for (int x = bx; x <= bx + w; x++) {
-                map[y][x] = open;
-            }
-        }
-    }
-
-    /**
-     * Checks if a given x and y value is a wall
-     * @param x int x
-     * @param y int y
-     * @return boolean value
-     */
-    public boolean isWall(int x, int y) {
-        //check bounds
-        if (x < 0 || y < 0 || x >= width || y >= height) return true;
-
-        //return value
-        return map[y][x] == wall;
-    }
-
     /**
      * Checks if a given Point value is a wall
      * @param p Point p
      * @return boolean value
      */
-    public boolean isWall(Point p) {return isWall(p.x(), p.y());}
-
-    /**
-     * Checks if a given x and y value are next to an open section
-     * @param x int x
-     * @param y int y
-     * @return boolean value
-     */
-    public boolean isNextToRoom(int x, int y) {
-        return (
-                !isWall(x - 1, y) ||
-                !isWall(x + 1, y) ||
-                !isWall(x, y - 1) ||
-                !isWall(x, y + 1) ||
-                !isWall(x - 1, y - 1) ||
-                !isWall(x + 1, y + 1) ||
-                !isWall(x - 1, y + 1) ||
-                !isWall(x + 1, y - 1)
-                );
-    }
-
+    private boolean isWall(Point p) {return isWall(p.x(), p.y());}
     /**
      * Get a random integer from start (inclusive) to stop (exclusive)
      * @param start int start (inclusive)
      * @param stop int stop (exclusive)
      * @return int value
      */
-    public int randInt(int start, int stop) {
+    private int randInt(int start, int stop) {
         return (int)(Math.random() * (stop - start) + start);
     }
-
     /**
      * Get a random map X value
      * @return int x
      */
-    public int randX() {
+    private int randX() {
         return randInt(1, map[0].length - 1);
     }
-
     /**
      * Get a random map Y value
      * @return int y
      */
-    public int randY() {
+    private int randY() {
         return randInt(1, map.length - 1);
     }
-
-    /**
-     * Print out the map
-     * @return String the printed map
-     */
-    public String toString() {
-        String s = "";
-        for (boolean[] row : map) {
-            for (boolean bit : row) {
-                if (!bit)
-                    s += "█";
-                else 
-                    s += " ";
-            }
-            s += "\n";
-        }
-        return s;
-    }
-
-    /**
-     * Getter for width
-     * @return int width
-     */
-    public int width() {
-        return width;
-    }
-
-    /**
-     * Getter for height
-     * @return int height
-     */
-    public int height() {
-        return height;
-    }
-
-    /**
-     * Method to create a new map
-     */
-    public void newMap() {
-        map = new boolean[height][width];
-        initMap();
-    }
-
-    /**
-     * Get the current map's player start position
-     * @return Point object
-     */
-    public Point startPos() {
-        return new Point(startPosition);
-    }
-
-    /**
-     * Get the current map's stair start position
-     * @return Point object
-     */
-    public Point stairPos() {
-        return new Point(stairPosition);
-    }
-
-    /**
-     * Get a free point (non-wall point)
-     * @return Point object
-     */
-    public Point getFreePoint() {
-        Point p = new Point(randX(), randY());
-        while (isWall(p))
-            p = new Point(randX(), randY());
-        return p;
-    }
-
     /**
      * Get a free non-spawn point (non-wall, non-stair or player spawn point)
      * @return Point object
      */
-    public Point getFreeNonSpawnPoint() {
+    Point getFreeNonSpawnPoint() {
         Point p = new Point(randX(), randY());
         while (isWall(p) || stairPosition.equals(p) || startPosition.equals(p))
             p = new Point(randX(), randY());
         return p;
     }
-    
     /**
-     * WIP-- check if a given enemy has a direct line of sight to the  player
+     * Getter for height
+     * @return int height
      */
-    public boolean hasLineOfSight(Point a, Point b) {
-        int x1 = a.x(), y1 = a.y(), x2 = b.x(), y2 = b.y();
-        return true;
+    int getHeight() {
+        return height;
     }
-
     /**
-     * Get the entire map
-     * @return boolean[][] map object
+     * Getter for width
+     * @return int width
      */
-    public boolean[][] get(){
-        return map;
+    int getWidth() {
+        return width;
+    }
+    /**
+     * Checks if a given x and y value are next to an open section
+     * @param x int x
+     * @param y int y
+     * @return boolean value
+     */
+    boolean isNextToRoom(int x, int y) {
+        return (
+                !isWall(x - 1, y) ||
+                        !isWall(x + 1, y) ||
+                        !isWall(x, y - 1) ||
+                        !isWall(x, y + 1) ||
+                        !isWall(x - 1, y - 1) ||
+                        !isWall(x + 1, y + 1) ||
+                        !isWall(x - 1, y + 1) ||
+                        !isWall(x + 1, y - 1)
+        );
+    }
+    /**
+     * Checks if a given x and y value is a wall
+     * @param x int x
+     * @param y int y
+     * @return boolean value
+     */
+    boolean isWall(int x, int y) {
+        //check bounds
+        if (x < 0 || y < 0 || x >= width || y >= height) return true;
+
+        //return value
+        return map[y][x] == WALL;
+    }
+    /**
+     * Method to create a new map
+     */
+    void newMap() {
+        map = new boolean[height][width];
+        initMap();
+    }
+    /**
+     * Get the current map's player start position
+     * @return Point object
+     */
+    Point startPos() {
+        return new Point(startPosition);
+    }
+    /**
+     * Get the current map's stair start position
+     * @return Point object
+     */
+    Point stairPos() {
+        return new Point(stairPosition);
+    }
+    /**
+     * Print out the map
+     * @return String the printed map
+     */
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (boolean[] row : map) {
+            for (boolean bit : row) {
+                if (!bit) {
+                    s.append("█");
+                } else
+                    s.append(" ");
+            }
+            s.append("\n");
+        }
+        return s.toString();
+    }
+    /** Main method.
+     * @param args Not used
+     */
+    public static void main(String[] args) {
+        Map m = new Map(40, 20);
+        System.out.println(m);
     }
 }

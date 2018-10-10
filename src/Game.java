@@ -11,7 +11,7 @@ public class Game extends JPanel implements KeyListener {
      * Map Related Stuff
      */
     private static Map map = new Map(30, 20);
-    private boolean[][] revealed = new boolean[map.height()][map.width()];
+    private boolean[][] revealed = new boolean[map.getHeight()][map.getWidth()];
     private boolean lockLogText = false;
 
     private final int tileSize = 32;
@@ -40,8 +40,8 @@ public class Game extends JPanel implements KeyListener {
     //WINDOWS
     private final int _xBuffer = 16, _yBuffer = 38;
     
-    private final int windowWidth = _xBuffer + tileSize * map.width(),
-                      windowHeight = _yBuffer + tileSize * map.height();
+    private final int windowWidth = _xBuffer + tileSize * map.getWidth(),
+                      windowHeight = _yBuffer + tileSize * map.getHeight();
     
     private static final String TITLE = "Dungeon Crawler 1.0";
     
@@ -87,7 +87,7 @@ public class Game extends JPanel implements KeyListener {
      */
     private void createNewMap() {
         map.newMap();
-        revealed = new boolean[map.height()][map.width()];
+        revealed = new boolean[map.getHeight()][map.getWidth()];
         level++;
         
         eMap.spawn(level, map);
@@ -151,8 +151,8 @@ public class Game extends JPanel implements KeyListener {
      * - Items outside of player fieldOfViewView have a 'fog'.
      */
     private void drawMap(Graphics g) {
-        for (int y = 0; y < map.height(); y++) {
-            for (int x = 0; x < map.width(); x++) {
+        for (int y = 0; y < map.getHeight(); y++) {
+            for (int x = 0; x < map.getWidth(); x++) {
                 if (player.isWithinView(x, y)) {
                     revealed[y][x] = true;
                 }
@@ -187,8 +187,8 @@ public class Game extends JPanel implements KeyListener {
      * Method to draw fog.
      */
     private void drawFog(Graphics g) {
-        for (int y = 0; y < map.height(); y++)
-            for (int x = 0; x < map.width(); x++)
+        for (int y = 0; y < map.getHeight(); y++)
+            for (int x = 0; x < map.getWidth(); x++)
                 if (!player.isWithinView(x, y))
                     g.drawImage(loadImage("fog"), getPos(x), getPos(y),this);
     }
@@ -752,7 +752,7 @@ public class Game extends JPanel implements KeyListener {
         
         f.add(game);
         f.addKeyListener(game);
-        f.setSize(map.width() * 32 + _xBuffer, map.height() * 32 + _yBuffer);
+        f.setSize(map.getWidth() * 32 + _xBuffer, map.getHeight() * 32 + _yBuffer);
         f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         f.setVisible(true);
         f.setResizable(false);
