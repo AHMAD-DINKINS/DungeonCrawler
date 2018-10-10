@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-
 public class Player extends Entity
 {
     /**The name of the Player.*/
@@ -34,7 +33,7 @@ public class Player extends Entity
     }
     /**
     * Method that will be called whenever the Player has the posiblity of losing health.
-    * @param damage - an integer representing how much the Player will be attacking for.
+    * @param damage an integer representing how much the Player will be attacking for.
     */
     public void takeDamage(int damage){
         int defense = getBuffedDefense();
