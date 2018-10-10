@@ -5,8 +5,7 @@ import java.awt.event.*;
 import java.io.*;
 
 public class Game extends JPanel implements KeyListener {
-    private Toolkit t = Toolkit.getDefaultToolkit();
-    
+
     /**
      * Map Related Stuff
      */
@@ -18,7 +17,7 @@ public class Game extends JPanel implements KeyListener {
     private int pressTime = 0;
     
     /*# temporary, for testing purposes: */
-        public final boolean isWindows = false;
+        private final boolean isWindows = false;
     /*# temporary, for testing purposes END */
     
     /**
