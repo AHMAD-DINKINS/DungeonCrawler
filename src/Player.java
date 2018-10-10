@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-
 public class Player extends Entity
 {
     /**The name of the Player.*/
